@@ -26,30 +26,18 @@ answer (`not-pushed`, `behind`, `blocked`, `no-picture`, `not-pulled`, `waiting`
 An offline pass succeeds. If the judging call cannot reach the engine, the
 Action publishes an error status. Protect the branch by requiring `tolk/gate`.
 
-## Internal fixture preparation
+## Fixture setup
 
-When the owner has approved private Action sharing and a private CLI mirror,
-store the release reader as the fixture repository's Actions secret
-`TOLK_RELEASE_TOKEN`. On **each** Tolk step (gate, refresh and scope-close),
-add the following step-level environment entry, preserving its existing
-`with` inputs. For example, the gate step becomes:
+The E1 fixture and customer repositories use the same two workflows and the
+same public CLI release. Configure the source-scoped `TOLK_TOKEN`. Release
+assets are downloaded anonymously. The workflow's own GitHub token reports
+the verdict, comment and annotations. The CLI reads the engine settings from
+the checked-out configuration.
 
-```yaml
-- uses: randock/tolk-action@v1
-  env:
-    TOLK_RELEASE_TOKEN: ${{ secrets.TOLK_RELEASE_TOKEN }}
-  with:
-    token: ${{ secrets.TOLK_TOKEN }}
-```
-
-Supply a release reader with **Contents: read** on **randock/tolk-action only**.
-GitHub also implicitly grants metadata read. The installer requests only the
-release manifest, signature bundle and selected binary from that repository. The workflow token reports
-the result to GitHub. The CLI receives the source-scoped Tolk token and reads
-engine settings from the checked-out configuration. A customer repository's
-workflow token is normally scoped to that repository. Configuring private
-Action sharing is a separate owner decision. The organization scope allows
-eligible repositories throughout the organization to use the Action.
+For a separately authorized private build, the installer can read a step-local
+`TOLK_RELEASE_TOKEN` with Contents: read on `randock/tolk-action` only.
+The shipped templates omit it. The installer sends this credential only to
+the GitHub release API and verifies the same signature and checksums.
 
 ## Release
 
@@ -58,17 +46,19 @@ eligible repositories throughout the organization to use the Action.
    values against the candidate manifest. Review and commit that manifest as
    `checksums/vX.Y.Z.txt` in this Action and pin its version in `action.yml`.
 2. Follow the [Tolk CLI release procedure](https://github.com/randock/tolk#reproducing-a-cli-release)
-   to sign the manifest on the approved immutable source tag. The installer checks
+   to sign the manifest on the approved immutable source tag in the private engine repository. The installer checks
    the pinned Cosign v3.1.4 verifier before use, verifies the complete manifest
    against the exact Tolk workflow and version tag with the GitHub Actions issuer,
    then checks the selected binary. Windows on Arm uses the x64 Cosign build
    under emulation and the native arm64 Tolk CLI. Both download routes require
    the signature bundle.
 3. After independent review and green CI for the exact Action head, land the
-   reviewed PR. Create a GitHub release in this repository at tag `cli-vX.Y.Z`
+   reviewed PR through the project’s release process. Independently verify the signed
+   candidate and inspect the Action repository’s public contents before making
+   this repository public. Create a GitHub release here at tag `cli-vX.Y.Z`
    on the reviewed revision. Upload the six raw binaries, `SHA256SUMS` and `SHA256SUMS.sigstore.json`
    from the verified build, and record both source revisions and the build run.
-   Download the release again, verify the bundle and check every pinned digest. Existing version
+   Download all eight assets anonymously, verify the bundle and check every pinned digest. Existing version
    tags and their assets are immutable.
 4. Create the immutable Action release tag (initially `v1.0.0`). Verify the
    release through an authorized consuming repository before updating the

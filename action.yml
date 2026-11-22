@@ -1,0 +1,76 @@
+name: Tolk
+description: Judge a pull request, report main, or close a deleted branch scope
+inputs:
+  token:
+    description: Source-scoped Tolk CI token
+    required: true
+  command:
+    description: gate, refresh, or scope-close
+    default: gate
+  levels:
+    description: Per-language gate level overrides
+  on-waiting:
+    description: Override the base configuration with fail or report
+  comment:
+    description: Maintain the pull request comment
+    default: 'true'
+  github-token:
+    description: Workflow token for reporting to GitHub
+    default: ${{ github.token }}
+  folder:
+    description: Capture folder (E5)
+  mock-data:
+    description: Capture contains mock data (E5)
+    default: 'false'
+  version:
+    description: Pinned CLI release version
+    default: v0.1.0
+  branch:
+    description: Sync pull request branch (E2)
+    default: chore/i18n-sync
+  scope:
+    description: Deleted branch name, defaults to the delete event ref
+outputs:
+  verdict:
+    description: Gate verdict
+    value: ${{ steps.tolk.outputs['verdict'] }}
+  levels:
+    description: Gate levels
+    value: ${{ steps.tolk.outputs['levels'] }}
+  rule:
+    description: Gate rule
+    value: ${{ steps.tolk.outputs['rule'] }}
+  waiting:
+    description: Gate waiting
+    value: ${{ steps.tolk.outputs['waiting'] }}
+  not-pulled:
+    description: Gate not-pulled
+    value: ${{ steps.tolk.outputs['not-pulled'] }}
+  not-pushed:
+    description: Gate not-pushed
+    value: ${{ steps.tolk.outputs['not-pushed'] }}
+  behind:
+    description: Gate behind
+    value: ${{ steps.tolk.outputs['behind'] }}
+  blocked:
+    description: Gate blocked
+    value: ${{ steps.tolk.outputs['blocked'] }}
+  no-picture:
+    description: Gate no-picture
+    value: ${{ steps.tolk.outputs['no-picture'] }}
+runs:
+  using: composite
+  steps:
+    - id: tolk
+      shell: bash
+      env:
+        ACTION_DIR: ${{ github.action_path }}
+        ACTION_COMMAND: ${{ inputs.command }}
+        ACTION_VERSION: ${{ inputs.version }}
+        ACTION_LEVELS: ${{ inputs.levels }}
+        ACTION_ON_WAITING: ${{ inputs.on-waiting }}
+        ACTION_COMMENT: ${{ inputs.comment }}
+        ACTION_SCOPE: ${{ inputs.scope }}
+        ACTION_GITHUB_TOKEN: ${{ inputs.github-token }}
+        TOLK_TOKEN: ${{ inputs.token }}
+      run: node "$ACTION_DIR/src/main.mjs"

@@ -1,0 +1,11 @@
+# .github/workflows/i18n-close.yml   (when a branch is deleted, not when a pull request closes: G.7)
+on: delete
+jobs:
+  close:
+    if: github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }                     # actions: the time its run was created
+    steps:
+      - uses: actions/checkout@v4                                      # the default branch: for tolk.yaml
+      - uses: randock/tolk-action@v1
+        with: { command: scope-close, scope: "${{ github.event.ref }}", token: "${{ secrets.TOLK_TOKEN }}" }

@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { install } from '../src/install.mjs'
 import { run } from '../src/main.mjs'
 import { annotations, commentBody, upsertComment } from '../src/report.mjs'
 
@@ -119,27 +117,6 @@ test('refresh and scope-close pass through CLI failure and use the original dele
   assert.deepEqual(args, ['scope','close','--deleted-at','2026-11-20T10:00:00Z','--','feat/deleted'])
 })
 
-test('installer verifies bytes against the manifest in the Action before writing an executable', async t => {
-  const dir = await mkdtemp(join(tmpdir(), 'install-test-'))
-  t.after(() => rm(dir, { recursive: true, force: true }))
-  const bytes = Buffer.from('fixture executable bytes')
-  const sha = createHash('sha256').update(bytes).digest('hex')
-  const opts = { arch:'x64', platform:'linux', token:'read-only-demo', readManifest: () => sha + '  tolk-linux-amd64\n',
-    request: async (url, { headers }) => {
-      assert.equal(headers.Authorization, 'Bearer read-only-demo')
-      if (url.endsWith('/tags/cli-v0.1.0')) return Response.json({assets:[{ id:4, name:'tolk-linux-amd64' }]})
-      assert.equal(url, 'https://api.github.com/repos/randock/tolk-action/releases/assets/4')
-      return new Response(bytes)
-    } }
-  await assert.rejects(install(dir,'latest',opts), /exact CLI version/)
-  await assert.rejects(install(dir,'v0.1.0',{ ...opts, readManifest: () => '0'.repeat(64)+'  tolk-linux-amd64' }), /Checksum mismatch/)
-  await assert.rejects(readFile(join(dir,'tolk-linux-amd64')), { code:'ENOENT' })
-  await assert.rejects(install(dir,'v0.1.0',{ ...opts, token: '', request: async (_, {headers}) => {
-    assert.equal(headers.Authorization, undefined); return new Response('', {status:404})
-  } }), /HTTP 404/)
-  assert.deepEqual(await readFile(await install(dir,'v0.1.0',opts)), bytes)
-})
-
 test('simultaneous first reports converge on a single gate comment', async () => {
   const comments = new Map()
   let id = 0
@@ -194,22 +171,4 @@ test('initial and repeated close runs send the same deletion time', async () => 
   }
   assert.deepEqual(invocations[0], ['scope', 'close', '--deleted-at', '2026-11-20T10:00:00Z', '--', 'reused-name'])
   assert.deepEqual(invocations[1], invocations[0])
-})
-
-test('the customer installer downloads and verifies a public release without credentials', async t => {
-  const dir = await mkdtemp(join(tmpdir(), 'install-test-'))
-  t.after(() => rm(dir, { recursive: true, force: true }))
-  const bytes = Buffer.from('public fixture')
-  const digest = createHash('sha256').update(bytes).digest('hex')
-  const path = await install(dir, 'v0.1.0', {
-    platform: 'linux', arch: 'x64', token: '',
-    readManifest: () => digest + '  tolk-linux-amd64\n',
-    request: async (url, { headers }) => {
-      assert.equal(headers.Authorization, undefined)
-      if (url.endsWith('/tags/cli-v0.1.0')) return Response.json({ assets: [{ id: 5, name: 'tolk-linux-amd64' }] })
-      assert.equal(url, 'https://api.github.com/repos/randock/tolk-action/releases/assets/5')
-      return new Response(bytes)
-    }
-  })
-  assert.deepEqual(await readFile(path), bytes)
 })

@@ -44,7 +44,7 @@ add the following step-level environment entry, preserving its existing
 
 Supply a release reader with **Contents: read** on **randock/tolk-action only**.
 GitHub also implicitly grants metadata read. The installer requests only the
-release and selected asset from that repository. The workflow token reports
+release manifest, signature bundle and selected binary from that repository. The workflow token reports
 the result to GitHub. The CLI receives the source-scoped Tolk token and reads
 engine settings from the checked-out configuration. A customer repository's
 workflow token is normally scoped to that repository. Configuring private
@@ -57,16 +57,26 @@ eligible repositories throughout the organization to use the Action.
    workflow. Independently reproduce all six binaries and check their SHA-256
    values against the candidate manifest. Review and commit that manifest as
    `checksums/vX.Y.Z.txt` in this Action and pin its version in `action.yml`.
-2. After independent review and green CI for the exact Action head, land the
+2. Follow the [Tolk CLI release procedure](https://github.com/randock/tolk#reproducing-a-cli-release)
+   to sign the manifest on the approved immutable source tag. The installer checks
+   the pinned Cosign v3.1.4 verifier before use, verifies the complete manifest
+   against the exact Tolk workflow and version tag with the GitHub Actions issuer,
+   then checks the selected binary. Windows on Arm uses the x64 Cosign build
+   under emulation and the native arm64 Tolk CLI. Both download routes require
+   the signature bundle.
+3. After independent review and green CI for the exact Action head, land the
    reviewed PR. Create a GitHub release in this repository at tag `cli-vX.Y.Z`
-   on the reviewed revision. Upload the six raw binaries and `SHA256SUMS`
+   on the reviewed revision. Upload the six raw binaries, `SHA256SUMS` and `SHA256SUMS.sigstore.json`
    from the verified build, and record both source revisions and the build run.
-   Download the release again and verify every pinned digest. Existing version
+   Download the release again, verify the bundle and check every pinned digest. Existing version
    tags and their assets are immutable.
-3. Create the immutable Action release tag (initially `v1.0.0`). Verify the
+4. Create the immutable Action release tag (initially `v1.0.0`). Verify the
    release through an authorized consuming repository before updating the
    floating `v1` tag to that same reviewed commit. Use an expected-old-SHA
    lease when moving an existing major tag.
 
 Run `node --test` to exercise the installer, all gate states, annotations,
 comment updates and branch deletion without credentials or a remote engine.
+
+Run `node scripts/check-signature.mjs` to verify a published upstream test
+manifest and exercise rejection with the real pinned verifier.

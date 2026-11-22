@@ -10,16 +10,29 @@ for blocking waits and success for report-only waits.
 
 ## Install
 
-Copy the [three workflow templates](workflows/) to `.github/workflows/` and set
-`TOLK_TOKEN` to the source's CI token. Install your extractor's dependencies
-before running the Action. The templates include the E2 sync steps specified
-in section 8.6. Until E2 is released, disable those steps and scheduled sync.
-Gate requires contents read, pull requests write and statuses write. Refresh
-needs a checkout with the previous 50 commits. Close reads the original workflow
-run's creation time, including on reruns. In repositories with restricted
-defaults, grant the close job `contents: read` and `actions: read`.
+Copy the [two E1 workflow files](workflows/) to `.github/workflows/` and set
+`TOLK_TOKEN` to the source's CI token. The customer CLI download uses no release
+credential. Install your extractor's dependencies before running the Action.
+Gate runs on PR changes, including a change of base. Main refreshes with the
+previous 50 commits. Close checks out the default branch and reads its own run's
+creation time, including on reruns. The templates grant each job its required
+permissions. Automated text delivery arrives with E2.
 
-A private release requires an additional step environment variable:
+Inputs and defaults are listed in [action.yml](action.yml). `levels` accepts
+`en=none,nl=machine`. Set `on-waiting` to `fail` or `report` to override
+the base policy, or `comment: false` to publish only the status and annotations.
+Outputs are `verdict`, `rule`, JSON `levels` and the distinct ID count for each
+answer (`not-pushed`, `behind`, `blocked`, `no-picture`, `not-pulled`, `waiting`).
+An offline pass succeeds. If the judging call cannot reach the engine, the
+Action publishes an error status. Protect the branch by requiring `tolk/gate`.
+
+## Internal fixture preparation
+
+When the owner has approved private Action sharing and a private CLI mirror,
+store the release reader as the fixture repository's Actions secret
+`TOLK_RELEASE_TOKEN`. On **each** Tolk step (gate, refresh and scope-close),
+add the following step-level environment entry, preserving its existing
+`with` inputs. For example, the gate step becomes:
 
 ```yaml
 - uses: randock/tolk-action@v1
@@ -37,14 +50,6 @@ engine settings from the checked-out configuration. A customer repository's
 workflow token is normally scoped to that repository. Configuring private
 Action sharing is a separate owner decision. The organization scope allows
 eligible repositories throughout the organization to use the Action.
-
-Inputs and defaults are listed in [action.yml](action.yml). `levels` accepts
-`en=none,nl=machine`. Set `on-waiting` to `fail` or `report` to override
-the base policy, or `comment: false` to publish only the status and annotations.
-Outputs are `verdict`, `rule`, JSON `levels` and the distinct ID count for each
-answer (`not-pushed`, `behind`, `blocked`, `no-picture`, `not-pulled`, `waiting`).
-An offline pass succeeds. If the judging call cannot reach the engine, the
-Action publishes an error status. Protect the branch by requiring `tolk/gate`.
 
 ## Release
 

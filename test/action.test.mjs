@@ -159,3 +159,57 @@ test('simultaneous first reports converge on a single gate comment', async () =>
   assert.equal(id, 2)
   assert.deepEqual([...comments.keys()], [1])
 })
+
+test('close refuses to call the CLI when its original run time is unavailable', async () => {
+  const env = { ACTION_COMMAND: 'scope-close', GITHUB_EVENT_NAME: 'delete', GITHUB_RUN_ID: '42' }
+  const event = { ref_type: 'branch', ref: 'reused-name' }
+  for (const metadata of [Error('HTTP 403'), {}, { created_at: 'invalid' }]) {
+    await assert.rejects(run(env, event, {
+      api(path) {
+        assert.equal(path, '/actions/runs/42')
+        if (metadata instanceof Error) throw metadata
+        return metadata
+      },
+      download: () => assert.fail('no binary needed'),
+      invoke: () => assert.fail('no close call is safe')
+    }), /workflow run creation time .*actions: read/)
+  }
+})
+
+test('initial and repeated close runs send the same deletion time', async () => {
+  const invocations = []
+  for (const attempt of ['1', '2']) {
+    const code = await run({
+      ACTION_COMMAND: 'scope-close', GITHUB_EVENT_NAME: 'delete',
+      GITHUB_RUN_ID: '42', GITHUB_RUN_ATTEMPT: attempt
+    }, { ref_type: 'branch', ref: 'reused-name' }, {
+      api: path => {
+        assert.equal(path, '/actions/runs/42')
+        return { created_at: '2026-11-20T10:00:00Z', updated_at: '2026-11-21T15:00:00Z' }
+      },
+      download: () => 'tolk',
+      invoke: (_, args) => { invocations.push(args); return { code: 0, stdout: '' } }
+    })
+    assert.equal(code, 0)
+  }
+  assert.deepEqual(invocations[0], ['scope', 'close', '--deleted-at', '2026-11-20T10:00:00Z', '--', 'reused-name'])
+  assert.deepEqual(invocations[1], invocations[0])
+})
+
+test('the customer installer downloads and verifies a public release without credentials', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'install-test-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const bytes = Buffer.from('public fixture')
+  const digest = createHash('sha256').update(bytes).digest('hex')
+  const path = await install(dir, 'v0.1.0', {
+    platform: 'linux', arch: 'x64', token: '',
+    readManifest: () => digest + '  tolk-linux-amd64\n',
+    request: async (url, { headers }) => {
+      assert.equal(headers.Authorization, undefined)
+      if (url.endsWith('/tags/cli-v0.1.0')) return Response.json({ assets: [{ id: 5, name: 'tolk-linux-amd64' }] })
+      assert.equal(url, 'https://api.github.com/repos/randock/tolk-action/releases/assets/5')
+      return new Response(bytes)
+    }
+  })
+  assert.deepEqual(await readFile(path), bytes)
+})

@@ -56,14 +56,22 @@ export async function run(env, event, { api = github(env), download = install, i
   const dir = await mkdtemp(join(env.RUNNER_TEMP || tmpdir(), 'tolk-'))
   try {
     if (cmd !== 'gate') {
-      const binary = await download(dir, env.ACTION_VERSION)
       let args = ['refresh']
       if (cmd === 'scope-close') {
         if (env.GITHUB_EVENT_NAME !== 'delete' || event.ref_type !== 'branch') throw Error('scope-close requires a branch delete event')
-        const { created_at: deletedAt } = await api(`/actions/runs/${env.GITHUB_RUN_ID}`)
-        if (!deletedAt || !Number.isFinite(Date.parse(deletedAt))) throw Error('Missing workflow run creation time')
+        let metadata
+        try {
+          metadata = await api(`/actions/runs/${env.GITHUB_RUN_ID}`)
+        } catch (error) {
+          throw Error(`Cannot read workflow run creation time (requires actions: read): ${error.message}`)
+        }
+        const deletedAt = metadata?.created_at
+        if (typeof deletedAt !== 'string' || !Number.isFinite(Date.parse(deletedAt))) {
+          throw Error('Missing or invalid workflow run creation time (requires actions: read)')
+        }
         args = ['scope', 'close', '--deleted-at', deletedAt, '--', env.ACTION_SCOPE || event.ref]
       }
+      const binary = await download(dir, env.ACTION_VERSION)
       const result = await invoke(binary, args, env)
       log(result.stdout)
       return result.code

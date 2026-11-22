@@ -139,3 +139,23 @@ test('installer verifies bytes against the manifest in the Action before writing
   } }), /HTTP 404/)
   assert.deepEqual(await readFile(await install(dir,'v0.1.0',opts)), bytes)
 })
+
+test('simultaneous first reports converge on a single gate comment', async () => {
+  const comments = new Map()
+  let id = 0
+  const api = async (path, method, data) => {
+    if (!method) return [...comments.values()]
+    if (method === 'POST') {
+      const row = { id: ++id, user: { login: 'bot' }, body: data.body }
+      comments.set(row.id, row)
+      return row
+    }
+    const number = Number(path.split('/').at(-1))
+    if (method === 'DELETE') comments.delete(number)
+    else comments.get(number).body = data.body
+  }
+  const body = commentBody(base, {})
+  await Promise.all([upsertComment(api, 7, 'bot', body), upsertComment(api, 7, 'bot', body)])
+  assert.equal(id, 2)
+  assert.deepEqual([...comments.keys()], [1])
+})

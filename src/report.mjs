@@ -57,12 +57,25 @@ export function commentBody(report, status) {
   return lines.join('\n')
 }
 
-export async function upsertComment(api, number, author, body) {
+async function firstGateComment(api, number, author) {
   for (let page = 1; ; page++) {
     const comments = await api(`/issues/${number}/comments?per_page=100&page=${page}`)
     const own = comments.find(c => c.user.login === author && c.body?.startsWith(marker))
-    if (own) return api(`/issues/comments/${own.id}`, 'PATCH', { body })
-    if (comments.length < 100) break
+    if (own) return own
+    if (comments.length < 100) return null
   }
-  return api(`/issues/${number}/comments`, 'POST', { body })
+}
+
+export async function upsertComment(api, number, author, body) {
+  const existing = await firstGateComment(api, number, author)
+  if (existing) return api(`/issues/comments/${existing.id}`, 'PATCH', { body })
+
+  const created = await api(`/issues/${number}/comments`, 'POST', { body })
+  // Two runs can both see an empty thread. GitHub lists comments oldest first.
+  // A later creator retires only its own duplicate and updates the original.
+  const first = await firstGateComment(api, number, author)
+  if (first && first.id < created.id) {
+    await api(`/issues/comments/${first.id}`, 'PATCH', { body })
+    await api(`/issues/comments/${created.id}`, 'DELETE')
+  }
 }

@@ -34,7 +34,7 @@ function github(env) {
       redirect: 'error', body: JSON.stringify(body)
     })
     if (!response.ok) throw Error(`GitHub ${method} ${path} returned HTTP ${response.status}`)
-    return response.json()
+    return response.status === 204 ? undefined : response.json()
   }
 }
 

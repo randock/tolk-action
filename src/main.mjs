@@ -3,6 +3,7 @@ import { appendFile, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { sync } from './sync.mjs'
 import { install } from './install.mjs'
 import { annotations, commentBody, gateOutputs, gateStatus, upsertComment } from './report.mjs'
 
@@ -38,7 +39,12 @@ function github(env) {
   }
 }
 
-export async function run(env, event, { api = github(env), download = install, invoke = cli } = {}) {
+export async function run(env, event, { api = github(env), download = install, invoke = cli, graphql = async (query, variables) => {
+    const response = await fetch(env.GITHUB_GRAPHQL_URL || "https://api.github.com/graphql", { method:"POST", redirect:"error", headers:{Authorization:"Bearer "+env.ACTION_GITHUB_TOKEN,"Content-Type":"application/json"},body:JSON.stringify({query,variables}) })
+    const result = await response.json()
+    if (!response.ok || result.errors) throw Error("GitHub could not create the signed commit")
+    return result.data
+  } } = {}) {
   const cmd = env.ACTION_COMMAND
   const pr = event.pull_request
   if (cmd === 'gate') {
@@ -50,11 +56,12 @@ export async function run(env, event, { api = github(env), download = install, i
     if (!['true','false'].includes(env.ACTION_COMMENT) || !['','fail','report'].includes(env.ACTION_ON_WAITING)) {
       throw Error('comment must be true or false and on-waiting must be empty, fail or report')
     }
-  } else if (!['refresh','scope-close'].includes(cmd)) {
-    throw Error(`Unsupported E1 command: ${cmd}`)
+  } else if (!['refresh','scope-close','sync-pr'].includes(cmd)) {
+    throw Error(`Unsupported command: ${cmd}`)
   }
   const dir = await mkdtemp(join(env.RUNNER_TEMP || tmpdir(), 'tolk-'))
   try {
+    if (cmd === 'sync-pr') return await sync(env,event,api,graphql,await download(dir,env.ACTION_VERSION),invoke)
     if (cmd !== 'gate') {
       let args = ['refresh']
       if (cmd === 'scope-close') {

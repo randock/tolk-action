@@ -5,7 +5,7 @@ inputs:
     description: Source-scoped Tolk CI token
     required: true
   command:
-    description: gate, refresh, or scope-close
+    description: gate, refresh, sync-pr, or scope-close
     default: gate
   levels:
     description: Per-language gate level overrides
@@ -70,6 +70,7 @@ runs:
         ACTION_LEVELS: ${{ inputs.levels }}
         ACTION_ON_WAITING: ${{ inputs.on-waiting }}
         ACTION_COMMENT: ${{ inputs.comment }}
+        ACTION_BRANCH: ${{ inputs.branch }}
         ACTION_SCOPE: ${{ inputs.scope }}
         ACTION_GITHUB_TOKEN: ${{ inputs.github-token }}
         TOLK_TOKEN: ${{ inputs.token }}

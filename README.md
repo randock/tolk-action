@@ -8,7 +8,26 @@ missing texts and the branch link supplied by the engine. Fork PRs skip before
 download and credential use. Waiting leaves the job green. The status is pending
 for blocking waits and success for report-only waits.
 
-## Install
+## Install the CLI on macOS or Linux
+
+Run this in a terminal on an Intel or Arm64 Mac, or on x86-64 or Arm64 Linux:
+
+```sh
+bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/randock/tolk-action/f7178c8d0abb31ccc12ab4d7f002beb37bdd1143/install.sh | sh'
+```
+
+The installer needs curl and either sha256sum or shasum. It verifies the signed
+manifest and the platform binary for CLI v0.1.0, then installs it at
+`$HOME/.local/bin/tolk`. Installation runs as your usual user. To put the CLI
+on your PATH, add this line to `~/.zshrc` or `~/.bashrc` and run it in your
+current shell:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+tolk --help
+```
+
+## Install the Action
 
 Copy the [two E1 workflow files](workflows/) to `.github/workflows/` and set
 `TOLK_TOKEN` to the source's CI token. The customer CLI download uses no release
@@ -55,11 +74,14 @@ the GitHub release API and verifies the same signature and checksums.
 3. After independent review and green CI for the exact Action head, land the
    reviewed PR through the project’s release process. Independently verify the signed
    candidate and inspect the Action repository’s public contents before making
-   this repository public. Create a GitHub release here at tag `cli-vX.Y.Z`
+   this repository public. Create a draft GitHub release here at tag `cli-vX.Y.Z`
    on the reviewed revision. Upload the six raw binaries, `SHA256SUMS` and `SHA256SUMS.sigstore.json`
    from the verified build, and record both source revisions and the build run.
-   Download all eight assets anonymously, verify the bundle and check every pinned digest. Existing version
-   tags and their assets are immutable.
+   Publish the draft after all eight assets are attached. Download them anonymously,
+   verify the bundle and check every pinned digest. GitHub locks assets on publication
+   for releases created since immutable releases were enabled. Supersede a bad
+   release with a new version. Update the shell installer pins and its commit URL
+   alongside the Action pins for each new CLI version.
 4. Create the immutable Action release tag (initially `v1.0.0`). Verify the
    release through an authorized consuming repository before updating the
    floating `v1` tag to that same reviewed commit. Use an expected-old-SHA

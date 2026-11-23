@@ -8,6 +8,10 @@ missing texts and the branch link supplied by the engine. Fork PRs skip before
 download and credential use. Waiting leaves the job green. The status is pending
 for blocking waits and success for report-only waits.
 
+Connect your repository with the [getting-started guide](docs/getting-started.md).
+Look up file formats, configuration defaults, commands and token roles in the
+[E1 repository and CLI reference](docs/repository-reference.md).
+
 ## Install the CLI on macOS or Linux
 
 Run this in a terminal on an Intel or Arm64 Mac, or on x86-64 or Arm64 Linux:

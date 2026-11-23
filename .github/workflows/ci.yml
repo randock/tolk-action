@@ -21,3 +21,5 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.id != github.event.pull_request.base.repo.id
         uses: ./
         with: { token: '' }
+      - name: Install the signed public CLI as an end user
+        run: node scripts/check-customer-install.mjs

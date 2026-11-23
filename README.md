@@ -1,7 +1,7 @@
 # Tolk Action
 
 Use `randock/tolk-action@v1` to run the pinned Tolk CLI on a repository's own runner.
-The E1 commands are `gate` (default), `refresh` and `scope-close`.
+The commands are `gate` (default), `refresh`, `sync-pr` and `scope-close`.
 Gate publishes the required commit status `tolk/gate` on the PR head. Its
 single comment contains the CLI message, committed drafts and translations,
 missing texts and the branch link supplied by the engine. Fork PRs skip before
@@ -33,13 +33,23 @@ tolk --help
 
 ## Install the Action
 
-Copy the [two E1 workflow files](workflows/) to `.github/workflows/` and set
+Copy the [workflow files](workflows/) to `.github/workflows/` and set
 `TOLK_TOKEN` to the source's CI token. The customer CLI download uses no release
 credential. Install your extractor's dependencies before running the Action.
 Gate runs on PR changes, including a change of base. Main refreshes with the
 previous 50 commits. Close checks out the default branch and reads its own run's
 creation time, including on reruns. The templates grant each job its required
-permissions. Automated text delivery arrives with E2.
+permissions. The main job runs sync-pr after refresh. The dispatch workflow also runs it when Tolk sends a delivery.
+Enable “Allow GitHub Actions to create and approve pull requests” in the repository's Actions settings.
+The runner needs Git, Node and Ruby (including Psych), as provided on GitHub's Ubuntu runners.
+
+Sync checks out the default branch's current tip, pulls the latest catalogue entries,
+and builds one signed commit on that tip using GitHub's createCommitOnBranch API.
+It updates the sync branch with a lease, opens or updates its PR, and publishes
+`tolk/gate` on the signed head. If main already has everything, it closes the open PR.
+The default workflow token does not start other workflows on its commits. For
+additional required checks, supply a repository-owned GitHub App token using
+`github-token`. Only the repository runner receives that credential.
 
 Inputs and defaults are listed in [action.yml](action.yml). `levels` accepts
 `en=none,nl=machine`. Set `on-waiting` to `fail` or `report` to override

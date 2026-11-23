@@ -1,0 +1,14 @@
+# .github/workflows/i18n-sync.yml
+on:
+  workflow_dispatch:
+    inputs: { event: { type: string } }
+  schedule: [{ cron: "17 4 * * *" }]
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    concurrency: { group: i18n-sync, cancel-in-progress: false }
+    permissions: { contents: write, pull-requests: write, statuses: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: randock/tolk-action@v1
+        with: { command: sync-pr, token: "${{ secrets.TOLK_TOKEN }}" }

@@ -16,9 +16,12 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     concurrency: { group: i18n-main, cancel-in-progress: false }      # one at a time
-    permissions: { contents: read }
+    permissions: { contents: write, pull-requests: write, statuses: write }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 50 }                                      # the commits before it: G.2, step 1
       - uses: randock/tolk-action@v1
         with: { command: refresh, token: "${{ secrets.TOLK_TOKEN }}" }
+      - uses: randock/tolk-action@v1
+        if: always()
+        with: { command: sync-pr, token: "${{ secrets.TOLK_TOKEN }}" }

@@ -1,6 +1,6 @@
-# E1 repository and CLI reference
+# Repository and CLI reference
 
-This reference covers CLI **v0.1.0** and the public **v1** Action. For installation, token setup and the first import, follow [Connect your first repository](getting-started.md).
+This reference covers CLI **v0.2.0** and the public **v1** Action. For installation, token setup and the first import, follow [Connect your first repository](getting-started.md).
 
 ## Configuration
 
@@ -30,10 +30,10 @@ Replace the example origin, slugs, extractor and paths with the values for your 
 | `catalogue`, `drafts`, `project_copy` | Supply the language pattern. Defaults for the other two are `i18n/drafts.jsonl` and `i18n/tolk.project.json`. |
 | `base` | Target branch. Defaults to the branch identified by `origin/HEAD`. Fetch its tip and enough history to find a merge base. |
 | `fingerprint.attributes` | Names of attributes whose values change the key. Defaults to an empty list. A change to the list can require pushing affected keys again. |
-| `push.timeout` | Duration, default `15m`. E1 submits keys and pulls the available texts. Translation jobs start in E2. |
-| `gate.levels` | Required map. Use `none` for E1 draft fallback. `machine` can leave a key waiting for text. An explicit language wins over `"*"`. Uncovered languages use `none`. Requiring `approved` is unsupported. |
+| `push.timeout` | Duration, default `15m`. Submits keys and waits for translation jobs unless `--no-wait` is used. |
+| `gate.levels` | Required map. Use `none` for draft fallback. `machine` can leave a key waiting for text. An explicit language wins over `"*"`. Uncovered languages use `none`. Requiring `approved` is unsupported. |
 | `gate.rules` | Optional ordered list, e.g. `[{branch: "release/*", levels: {en: machine}}]`. First matching rule replaces the whole default map. Patterns match the whole case-sensitive branch name. `*` includes slashes and `?` matches one character. |
-| `gate.wait`, `gate.on_waiting` | The configured wait defaults to `10m`. CLI v0.1.0 accepts `--wait` and reports the current E1 verdict in one pass. Default waiting policy `fail` gives CLI exit 2 for a waiting verdict. `report` gives exit 0 for waiting. |
+| `gate.wait`, `gate.on_waiting` | The configured wait defaults to `10m`. CLI v0.2.0 accepts `--wait`. Default waiting policy `fail` gives CLI exit 2 for a waiting verdict. `report` gives exit 0 for waiting. |
 | `gate.pictures` | Accepts `off`, `report` (default) or `require`. Picture capture and delivery are later features. |
 
 The gate examines the named head against its merge base and reads policy from the current base tip. A PR that introduces the config uses level `none` for all languages. On other PRs an explicit `--levels` map overrides the resolved rule.
@@ -121,7 +121,7 @@ Run commands from your checkout. Global options include `--config PATH`, `--form
 | `tolk prune` | Offline | Remove lines for unused IDs from drafts and language files. Review the diff. |
 | `tolk find TEXT`, `tolk explain ID` | Offline | Search draft and catalogue text for matching IDs and locations, or show an ID’s extracted context and draft. |
 | `tolk import --texts LANG=FILE[:LEVEL]` | Admin | Repeat `--texts` once per language. Use `supplied` (default) or `approved`. Submit inputs and wait for the worker report. Optional `--glossary FILE`, `--style FILE`, `--descriptions FILE`. |
-| `tolk push [-m REASON] [--id ID] [--retry] [--no-wait]` | Author | Submit new or changed keys and update the working copy with available texts. Repeat `--id` to include specific keys, including a repair for an unpushed main key. The flags for retry and waiting apply to translation jobs from E2. |
+| `tolk push [-m REASON] [--id ID] [--retry] [--no-wait]` | Author | Submit new or changed keys and update the working copy with available texts. Repeat `--id` to include specific keys, including a repair for an unpushed main key. The retry and waiting flags apply to translation jobs. |
 | `tolk status` | Author or CI | Show acceptance and per-language state of the branch’s changed keys. |
 | `tolk pull [--all] [--id ID]` | Author or CI | Apply texts and removals for the working copy. Unknown keys keep their lines. `--all` includes every key. Repeat `--id` to include named keys. |
 | `tolk pull --latest` | Author or CI | Apply main’s pending delivery, including leftover removals and the current project copy. Run on a fresh delivery branch. This mode takes neither working-copy selector. |
@@ -134,4 +134,4 @@ Run commands from your checkout. Global options include `--config PATH`, `--form
 
 The CLI builds the import manifest from the extractor and drafts. `tolk import --format json` with your normal input flags returns the final report, including per-message outcomes, `would_refuse` push findings and `texts_refused`. A failed job or refused text exits 1, and a polling timeout exits 2. Review changed outcomes even on exit 0. Follow the [partial-import recovery steps](getting-started.md#import-existing-translations) before pulling.
 
-**Delivery.** The v1 Action exposes `gate`, `refresh` and `scope-close`. E1 uses a manual delivery branch and `tolk pull --latest`. Automated delivery PRs are planned for E2. There is no E1 `sync-pr` command.
+**Delivery.** The v1 Action exposes `gate`, `refresh`, `sync-pr` and `scope-close`. Sync prepares a repository-owned delivery pull request; manual delivery with `tolk pull --latest` remains available.

@@ -17,11 +17,11 @@ Look up file formats, configuration defaults, commands and token roles in the
 Run this in a terminal on an Intel or Arm64 Mac, or on x86-64 or Arm64 Linux:
 
 ```sh
-bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/randock/tolk-action/f7178c8d0abb31ccc12ab4d7f002beb37bdd1143/install.sh | sh'
+bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/randock/tolk-action/c80c256ae85a98334bf226fcc39ff76703785807/install.sh | sh'
 ```
 
 The installer needs curl and either sha256sum or shasum. It verifies the signed
-manifest and the platform binary for CLI v0.1.0, then installs it at
+manifest and the platform binary for CLI v0.2.0, then installs it at
 `$HOME/.local/bin/tolk`. Installation runs as your usual user. To put the CLI
 on your PATH, add this line to `~/.zshrc` or `~/.bashrc` and run it in your
 current shell:

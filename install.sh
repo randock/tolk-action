@@ -23,9 +23,9 @@ check_digest() {
 
 install_tolk() {
     [ "$#" -eq 0 ] || fail 'usage: sh install.sh'
-    version=v0.1.0
+    version=v0.2.0
     release="https://github.com/randock/tolk-action/releases/download/cli-$version"
-    manifest_digest=421e191fa098b324a8dff3253acf2f26e1652ed0e8cb8b526c71ed984c0d3b92
+    manifest_digest=848e8255e5db752a79ad34a5462bfaeb13401fecb040ce3912f9fb83e7c5c540
     system=$(uname -s)
     machine=$(uname -m)
     case "$system/$machine" in

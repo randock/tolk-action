@@ -1,23 +1,23 @@
 # Connect your first repository
 
-Tolk E1 links the IDs in your code to the drafts and language catalogues you commit. You can import existing translations, check a pull request and deliver catalogue changes. Your application reads the committed files and shows the draft wherever a language has no text for the current key.
+Tolk links the IDs in your code to the drafts and language catalogues you commit. You can import existing translations, check a pull request and deliver catalogue changes. Your application reads the committed files and shows the draft wherever a language has no text for the current key.
 
 ## Install the signed CLI
 
 On macOS or Linux (x86-64 or Arm64), use Bash, curl and either `shasum` or `sha256sum`. Run the pinned installer as your usual user:
 
 ```sh
-bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/randock/tolk-action/f7178c8d0abb31ccc12ab4d7f002beb37bdd1143/install.sh | sh'
+bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/randock/tolk-action/c80c256ae85a98334bf226fcc39ff76703785807/install.sh | sh'
 export PATH="$HOME/.local/bin:$PATH"
 tolk --help
 ```
 
-Add the export line to your shell profile for future terminals. The installer checks the pinned verifier and manifest, verifies the release workflow’s signature, and checks the binary against the signed manifest before installing it. Downloads are public. Windows x64 and Arm64 binaries, the signature bundle and verification details are on the [CLI v0.1.0 release](https://github.com/randock/tolk-action/releases/tag/cli-v0.1.0).
+Add the export line to your shell profile for future terminals. The installer checks the pinned verifier and manifest, verifies the release workflow’s signature, and checks the binary against the signed manifest before installing it. Downloads are public. Windows x64 and Arm64 binaries, the signature bundle and verification details are on the [CLI v0.2.0 release](https://github.com/randock/tolk-action/releases/tag/cli-v0.2.0).
 
 ## Set up the project and credentials
 
 1. Sign in to your Tolk web application with an email code or GitHub. Create an organisation and project. Choose the draft language and every language you will import, including any language you already ship.
-2. **Set the vocabulary before import.** Compare the kinds, attributes, values and variant axes in your extractor output with the project vocabulary. New projects start with kinds and no attributes. For example, if `forms.variant` is `audience` and the texts have `guide` and `walker` forms, create the `audience` attribute, add both values and mark it as a variant. Confirm this in Settings. Importing a catalogue does not create vocabulary. E1 may report a forms error or miss an unknown attribute. The named refusal `attribute_unknown` is required in E2 and has not shipped in E1. It will identify the offending attribute or value on push, or refuse the affected texts during import.
+2. **Set the vocabulary before import.** Compare the kinds, attributes, values and variant axes in your extractor output with the project vocabulary. New projects start with kinds and no attributes. For example, if `forms.variant` is `audience` and the texts have `guide` and `walker` forms, create the `audience` attribute, add both values and mark it as a variant. Confirm this in Settings. Importing a catalogue does not create vocabulary. The named refusal `attribute_unknown` identifies the offending attribute or value on push, or refuses affected texts during import.
 3. Add your repository as a source. For a one-token import and pull, choose **Author + Admin** when your deployment offers it. The default expiry is 24 hours. You can select a different future expiry or explicitly choose no expiry. Save the credential when it is shown and have your secret manager expose it to your local shell as `TOLK_TOKEN`. For a source with separate credentials, use temporary Admin for import and Author for pull and push.
 4. Use a separate **CI** token for the source’s GitHub Actions secret named `TOLK_TOKEN`. Use **Author** for daily work. After verifying the import and pull, revoke the setup credential in Settings. Changing a grant requires issuing a new token. The CLI reads the token only from the environment.
 
@@ -56,6 +56,6 @@ Run `tolk check --ci`. For new or changed keys, run `tolk push -m "Introduce the
 | NOT PULLED | Run `tolk pull`, inspect the corrected lines and commit them. |
 | BEHIND | Merge the current base into the branch. Resolve competing drafts, run `tolk check`, push, commit and rerun the gate. |
 
-After merge, the main workflow runs `tolk refresh`. To deliver updates in E1, start a fresh branch from current main, run `tolk pull --latest`, inspect and commit the catalogue, cleanup and project-copy changes, then open an ordinary gated PR. If work remains after merge and refresh, repeat on a fresh branch. Branch deletion triggers scope close. Automated delivery PRs and generated translations belong to E2. The E1 Action commands are `gate`, `refresh` and `scope-close`.
+After merge, the main workflow runs `tolk refresh`. To deliver updates in E1, start a fresh branch from current main, run `tolk pull --latest`, inspect and commit the catalogue, cleanup and project-copy changes, then open an ordinary gated PR. If work remains after merge and refresh, repeat on a fresh branch. Branch deletion triggers scope close. The Action also supports automated delivery with `sync-pr`.
 
 See the [configuration, file formats and CLI role matrix](repository-reference.md).

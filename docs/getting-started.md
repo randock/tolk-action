@@ -12,7 +12,7 @@ export PATH="$HOME/.local/bin:$PATH"
 tolk --help
 ```
 
-If the initial download fails, the pipeline may still report success. Check for the installer’s success message and run `tolk --help`. Add the export line to your shell profile for future terminals. The installer checks the pinned verifier and manifest, verifies the release workflow’s signature, and checks the binary against the signed manifest before installing it. Downloads are public. Windows x64 and Arm64 binaries, the signature bundle and verification details are on the [CLI v0.1.0 release](https://github.com/randock/tolk-action/releases/tag/cli-v0.1.0).
+If the initial download fails, the pipeline may still report success. Check for the installer’s success message and run `tolk --help`. Add the export line to your shell profile for future terminals. The installer checks the pinned verifier and manifest, verifies the release workflow’s signature, and checks the binary against the signed manifest before installing it. Downloads are public. Windows x64 and Arm64 binaries, the signature bundle and verification details are on the [CLI v0.2.0 release](https://github.com/randock/tolk-action/releases/tag/cli-v0.2.0).
 
 ## Set up the project and credentials
 

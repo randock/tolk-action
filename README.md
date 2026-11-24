@@ -10,7 +10,7 @@ for blocking waits and success for report-only waits.
 
 Connect your repository with the [getting-started guide](docs/getting-started.md).
 Look up file formats, configuration defaults, commands and token roles in the
-[E1 repository and CLI reference](docs/repository-reference.md).
+[repository and CLI reference](docs/repository-reference.md).
 
 ## Install the CLI on macOS or Linux
 
@@ -22,7 +22,7 @@ curl -fsSL https://tolk.nameshift.com/install.sh | sh
 
 If the initial download fails, the pipeline may still report success. Check for the
 installer’s success message and run `tolk --help`. The installer needs curl and either sha256sum or shasum. It verifies the signed
-manifest and the platform binary for CLI v0.1.0, then installs it at
+manifest and the platform binary for CLI v0.2.0, then installs it at
 `$HOME/.local/bin/tolk`. Installation runs as your usual user. To put the CLI
 on your PATH, add this line to `~/.zshrc` or `~/.bashrc` and run it in your
 current shell:

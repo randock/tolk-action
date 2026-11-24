@@ -62,7 +62,7 @@ Action publishes an error status. Protect the branch by requiring `tolk/gate`.
 
 ## Fixture setup
 
-The E1 fixture and customer repositories use the same two workflows and the
+The fixture and customer repositories use the same workflows and the
 same public CLI release. Configure the source-scoped `TOLK_TOKEN`. Release
 assets are downloaded anonymously. The workflow's own GitHub token reports
 the verdict, comment and annotations. The CLI reads the engine settings from

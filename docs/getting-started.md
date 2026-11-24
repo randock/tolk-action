@@ -1,6 +1,6 @@
 # Connect your first repository
 
-Tolk E1 links the IDs in your code to the drafts and language catalogues you commit. You can import existing translations, check a pull request and deliver catalogue changes. Your application reads the committed files and shows the draft wherever a language has no text for the current key.
+Tolk links the IDs in your code to the drafts and language catalogues you commit. You can import existing translations, check a pull request and deliver catalogue changes. Your application reads the committed files and shows the draft wherever a language has no text for the current key.
 
 ## Install the signed CLI
 
@@ -17,7 +17,7 @@ If the initial download fails, the pipeline may still report success. Check for 
 ## Set up the project and credentials
 
 1. Sign in to your Tolk web application with an email code or GitHub. Create an organisation and project. Choose the draft language and every language you will import, including any language you already ship.
-2. **Set the vocabulary before import.** Compare the kinds, attributes, values and variant axes in your extractor output with the project vocabulary. New projects start with kinds and no attributes. For example, if `forms.variant` is `audience` and the texts have `guide` and `walker` forms, create the `audience` attribute, add both values and mark it as a variant. Confirm this in Settings. Importing a catalogue does not create vocabulary. E1 may report a forms error or miss an unknown attribute. The named refusal `attribute_unknown` is required in E2 and has not shipped in E1. It will identify the offending attribute or value on push, or refuse the affected texts during import.
+2. **Set the vocabulary before import.** Compare the kinds, attributes, values and variant axes in your extractor output with the project vocabulary. New projects start with kinds and no attributes. For example, if `forms.variant` is `audience` and the texts have `guide` and `walker` forms, create the `audience` attribute, add both values and mark it as a variant. Confirm this in Settings. Importing a catalogue does not create vocabulary. The named refusal `attribute_unknown` identifies the offending attribute or value on push, or refuses the affected texts during import.
 3. Add your repository as a source. For a one-token import and pull, choose **Author + Admin** when your deployment offers it. The default expiry is 24 hours. You can select a different future expiry or explicitly choose no expiry. Save the credential when it is shown and have your secret manager expose it to your local shell as `TOLK_TOKEN`. For a source with separate credentials, use temporary Admin for import and Author for pull and push.
 4. Use a separate **CI** token for the source’s GitHub Actions secret named `TOLK_TOKEN`. Use **Author** for daily work. After verifying the import and pull, revoke the setup credential in Settings. Changing a grant requires issuing a new token. The CLI reads the token only from the environment.
 
@@ -48,7 +48,7 @@ Read the entire worker report before pulling. Check the imported, kept and chang
 
 ## Open the first pull request
 
-Run `tolk check --ci`. For new or changed keys, run `tolk push -m "Introduce the coastal guide"` and inspect the accepted and refused IDs. Commit the code, configuration, workflows, extractor, project copy, drafts, language catalogues and `.gitattributes`. Open the PR. Require the **tolk/gate** commit status and up-to-date branches before merging so the verdict covers the current base. The introduction gate checks the keys have reached the engine at level `none`. E1 can merge new keys with draft fallback.
+Run `tolk check --ci`. For new or changed keys, run `tolk push -m "Introduce the coastal guide"` and inspect the accepted and refused IDs. Commit the code, configuration, workflows, extractor, project copy, drafts, language catalogues and `.gitattributes`. Open the PR. Require the **tolk/gate** commit status and up-to-date branches before merging so the verdict covers the current base. The introduction gate checks the keys have reached the engine at level `none`. Keys can merge with draft fallback when the configured level allows it.
 
 | Gate result | What to do on your branch |
 |---|---|
@@ -56,6 +56,6 @@ Run `tolk check --ci`. For new or changed keys, run `tolk push -m "Introduce the
 | NOT PULLED | Run `tolk pull`, inspect the corrected lines and commit them. |
 | BEHIND | Merge the current base into the branch. Resolve competing drafts, run `tolk check`, push, commit and rerun the gate. |
 
-After merge, the main workflow runs `tolk refresh`. To deliver updates in E1, start a fresh branch from current main, run `tolk pull --latest`, inspect and commit the catalogue, cleanup and project-copy changes, then open an ordinary gated PR. If work remains after merge and refresh, repeat on a fresh branch. Branch deletion triggers scope close. Automated delivery PRs and generated translations belong to E2. The E1 Action commands are `gate`, `refresh` and `scope-close`.
+After merge, the main workflow runs `tolk refresh` and `sync-pr` to prepare a delivery pull request. The dispatch workflow also runs `sync-pr` when Tolk sends a delivery event. Review and merge the gated pull request; branch deletion triggers scope close. Manual delivery with `tolk pull --latest` remains available.
 
 See the [configuration, file formats and CLI role matrix](repository-reference.md).

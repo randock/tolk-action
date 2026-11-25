@@ -172,3 +172,35 @@ test('initial and repeated close runs send the same deletion time', async () => 
   assert.deepEqual(invocations[0], ['scope', 'close', '--deleted-at', '2026-11-20T10:00:00Z', '--', 'reused-name'])
   assert.deepEqual(invocations[1], invocations[0])
 })
+
+test('capture uploads the folder with the PR head scope and propagates CLI failures', async () => {
+  const env = { ACTION_COMMAND: 'capture', ACTION_FOLDER: '-mock pictures', ACTION_MOCK_DATA: 'true' }
+  const calls = []
+  const deps = {
+    api: () => assert.fail('capture does not call GitHub'),
+    download: () => '/verified/tolk',
+    invoke: (binary, args) => {
+      assert.equal(binary, '/verified/tolk')
+      calls.push(args)
+      return { code: 5, stdout: '' }
+    }
+  }
+  assert.equal(await run(env, event, deps), 5)
+  assert.equal(await run(env, {}, deps), 5)
+  assert.deepEqual(calls, [
+    ['capture', 'upload', '--mock-data', '--scope', 'feat/example', '--', '-mock pictures'],
+    ['capture', 'upload', '--mock-data', '--', '-mock pictures']
+  ])
+})
+
+test('capture refuses missing mock-data or folder, and skips fork pull requests', async () => {
+  const unused = () => assert.fail('capture must exit before download, API access or CLI invocation')
+  const deps = { api: unused, download: unused, invoke: unused }
+  const env = { ACTION_COMMAND: 'capture', ACTION_FOLDER: 'pictures' }
+  for (const value of [undefined, 'false', 'TRUE']) {
+    await assert.rejects(run({ ...env, ACTION_MOCK_DATA: value }, event, deps), /mock-data: true/)
+  }
+  await assert.rejects(run({ ...env, ACTION_MOCK_DATA: 'true', ACTION_FOLDER: ' ' }, event, deps), /requires folder/)
+  const fork = { ...pr, head: { ...pr.head, repo: { id: 10 } } }
+  assert.equal(await run(env, { ...event, pull_request: fork }, deps), 0)
+})

@@ -22,7 +22,7 @@ curl -fsSL https://tolk.nameshift.com/install.sh | sh
 
 If the initial download fails, the pipeline may still report success. Check for the
 installer’s success message and run `tolk --help`. The installer needs curl and either sha256sum or shasum. It verifies the signed
-manifest and the platform binary for CLI v0.1.0, then installs it at
+manifest and the platform binary for CLI v0.2.0, then installs it at
 `$HOME/.local/bin/tolk`. Installation runs as your usual user. To put the CLI
 on your PATH, add this line to `~/.zshrc` or `~/.bashrc` and run it in your
 current shell:

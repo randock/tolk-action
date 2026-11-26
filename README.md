@@ -1,7 +1,7 @@
 # Tolk Action
 
 Use `randock/tolk-action@v1` to run the pinned Tolk CLI on a repository's own runner.
-The commands are `gate` (default), `refresh`, `sync-pr` and `scope-close`.
+The commands are `gate` (default), `refresh`, `sync-pr`, `scope-close` and `capture`.
 Gate publishes the required commit status `tolk/gate` on the PR head. Its
 single comment contains the CLI message, committed drafts and translations,
 missing texts and the branch link supplied by the engine. Fork PRs skip before
@@ -59,6 +59,16 @@ Outputs are `verdict`, `rule`, JSON `levels` and the distinct ID count for each
 answer (`not-pushed`, `behind`, `blocked`, `no-picture`, `not-pulled`, `waiting`).
 An offline pass succeeds. If the judging call cannot reach the engine, the
 Action publishes an error status. Protect the branch by requiring `tolk/gate`.
+
+## Upload screen pictures
+
+Use a release that includes E5 capture support. Check out the same PR head
+used by the gate, run your capture script against mock data, and run the
+Action with `command: capture`, `folder` pointing to the images and
+`captures.json`, and `mock-data: true`. Use a source-scoped CI token.
+A nightly main job can use the same command. Keep the capture job separate
+from the required gate status and skip PRs from forks before running the
+capture script.
 
 ## Fixture setup
 

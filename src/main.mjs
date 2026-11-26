@@ -56,6 +56,13 @@ export async function run(env, event, { api = github(env), download = install, i
     if (!['true','false'].includes(env.ACTION_COMMENT) || !['','fail','report'].includes(env.ACTION_ON_WAITING)) {
       throw Error('comment must be true or false and on-waiting must be empty, fail or report')
     }
+  } else if (cmd === 'capture') {
+    if (pr && pr.head?.repo?.id !== pr.base?.repo?.id) {
+      log('Fork pull requests skip capture.')
+      return 0
+    }
+    if (env.ACTION_MOCK_DATA !== 'true') throw Error('capture requires mock-data: true to confirm the pictures contain only mock data')
+    if (!env.ACTION_FOLDER?.trim()) throw Error('capture requires folder with pictures and captures.json')
   } else if (!['refresh','scope-close','sync-pr'].includes(cmd)) {
     throw Error(`Unsupported command: ${cmd}`)
   }
@@ -64,6 +71,11 @@ export async function run(env, event, { api = github(env), download = install, i
     if (cmd === 'sync-pr') return await sync(env,event,api,graphql,await download(dir,env.ACTION_VERSION),invoke)
     if (cmd !== 'gate') {
       let args = ['refresh']
+      if (cmd === 'capture') {
+        args = ['capture', 'upload', '--mock-data']
+        if (pr?.head?.ref) args.push('--scope', pr.head.ref)
+        args.push('--', env.ACTION_FOLDER)
+      }
       if (cmd === 'scope-close') {
         if (env.GITHUB_EVENT_NAME !== 'delete' || event.ref_type !== 'branch') throw Error('scope-close requires a branch delete event')
         let metadata

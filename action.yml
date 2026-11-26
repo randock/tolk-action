@@ -1,11 +1,11 @@
 name: Tolk
-description: Judge a pull request, report main, or close a deleted branch scope
+description: Run Tolk on a repository’s runner
 inputs:
   token:
     description: Source-scoped Tolk CI token
     required: true
   command:
-    description: gate, refresh, sync-pr, or scope-close
+    description: gate, refresh, sync-pr, scope-close, or capture
     default: gate
   levels:
     description: Per-language gate level overrides
@@ -18,9 +18,9 @@ inputs:
     description: Workflow token for reporting to GitHub
     default: ${{ github.token }}
   folder:
-    description: Capture folder (E5)
+    description: Folder containing images and captures.json
   mock-data:
-    description: Capture contains mock data (E5)
+    description: Set to true to confirm all pictures show mock data
     default: 'false'
   version:
     description: Pinned CLI release version
@@ -72,6 +72,8 @@ runs:
         ACTION_COMMENT: ${{ inputs.comment }}
         ACTION_BRANCH: ${{ inputs.branch }}
         ACTION_SCOPE: ${{ inputs.scope }}
+        ACTION_FOLDER: ${{ inputs.folder }}
+        ACTION_MOCK_DATA: ${{ inputs.mock-data }}
         ACTION_GITHUB_TOKEN: ${{ inputs.github-token }}
         TOLK_TOKEN: ${{ inputs.token }}
       run: node "$ACTION_DIR/src/main.mjs"
